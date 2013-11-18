@@ -1,4 +1,21 @@
-Check out the [`autoupdate` branch](fervor/tree/autoupdate) by Torben Dannhauer too!
+This is a branch that was made by Torben Dannhauer and updated by Paulo Pinheiro to support Qt5 as well as Qt4. That promises an *autoupdate functionality* at least on Windows.
+
+According to the author, the following changes were made:
+
+* Clicking "Install Update" now installs the update automatically:
+	* downloads the update with a progress bar
+	* renames all old files with an available replacement to `<oldname>.oldversion`
+	* unzips the update files
+	* restarts the app to run the new software version – now the old binaries are no longer locked by Windows
+	* and finally during the start process of the software cleans up the renamed old files.
+	* (Windows does not allow to delete files of running apps, but renaming is allowed – thus restarting the app allows to switch to the new version and the final cleanup deletes the old files)
+* Fervor now depends on [QuaZIP](http://quazip.sourceforge.net/), a zipping framework for Qt to be able to unzip the update within the program without further _external_ dependencies like 7zip, WinRar or similar solutions.
+* Removed the dialog which presents the update for manual download – it is no longer required.
+* Removing the preprocessor definitions `FV_APP_VERSION` and `FV_APP_VERSION` – it is far more elegant to use the QApplication::set* mechanism instead the defined strings.
+* Integrate SSL-Certificate fingerprint check to ensure the update is downloaded from the right server.
+* Integrate support for Webserver-authentication do allow to protect the updates as well as the update feed with `.htaccess`
+* Integrate support for details appearance control of the update window – it should be configurable if "skip this update" and if "remind me later" is allowed.
+* Changed update window appearance: Resizing is no longer possible, also the title bar is removed. The user has now only the buttons to react on a proposed update.
 
 ----
 
@@ -50,7 +67,7 @@ Git clone Fervor:
 
 ...or add it as a submodule if you're using Git in your project:
 
-	git add submodule https://github.com/pypt/fervor.git fervor
+	git submodule add https://github.com/pypt/fervor.git fervor
 	git submodule init
 	git submodule update
 
@@ -67,6 +84,8 @@ If you use CMake and would like to build Fervor with it instead of Qt Creator, r
 
 
 ### 1. Include Fervor into your Qt Creator Project (`.pro` file)
+
+(Not officially supported, CMake is the only supported way to build, but you can try if you'd like!)
 
 Include Fervor's project include file `Fervor.pri` after setting your application's `TARGET` and `VERSION`:
 
@@ -168,7 +187,7 @@ I've decided that I'll check for updates in `int main(int argc, char *argv[])` t
 		QApplication a(argc, argv);
 
 		// <...> setApplicationName(), setApplicationVersion(), SetFeedURL(), etc.
-	
+
 		// Check for updates silently -- this will not block the initialization of
 		// your application, just start a HTTP request and return immediately.
 		FvUpdater::sharedUpdater()->CheckForUpdatesSilent();
@@ -207,7 +226,3 @@ It is up to you to implement "appcasts" and "release notes". If you don't releas
 
 Donors: Marek Pazdan. Thanks!
 
-
-# Contacts
-
-I'm Linas, my email is <shirshegsm@gmail.com>

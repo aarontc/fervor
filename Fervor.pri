@@ -1,50 +1,84 @@
-QT += core gui webkit network
+QT += core network
+!build_pass:message("If you want to enable GUI for Fervor, add CONFIG += fervor_gui to your .pro file")
+contains(QT_VERSION, ^5\\.[0-9]\\..*){
+    fervor_gui {
+        DEFINES += FV_GUI
+        QT += webkitwidgets
+    }
+    win32:INCLUDEPATH += $$[QT_INSTALL_PREFIX]/include/QtZlib
+}else{
+    fervor_gui {
+        DEFINES += FV_GUI
+        QT += gui webkit
+    }
+    win32:INCLUDEPATH += $$[QT_INSTALL_PREFIX]/../../../../QtSources/4.8.1/src/3rdparty/zlib
+}
+DEFINES += FV_APP_NAME=\\\"$$TARGET\\\"
+DEFINES += FV_APP_VERSION=\\\"$$VERSION\\\"
 
-isEmpty(FV_APP_NAME) {
-	warning("Fervor: falling back to application name '$$TARGET'")
-	DEFINES += FV_APP_NAME=\\\"$$TARGET\\\"
+PREVIOUS_FERVOR_GUI = $$cat($$PWD/fervor.gui)
+fervor_gui {
+    CURRENT_FERVOR_GUI = enabled
 } else {
-	message("Fervor: building for application name '$$FV_APP_NAME'")
-	DEFINES += FV_APP_NAME=\\\"$$FV_APP_NAME\\\"
+    CURRENT_FERVOR_GUI = disabled
+}
+# if last build was with another GUI option, recompile some files
+!equals(PREVIOUS_FERVOR_GUI, $$CURRENT_FERVOR_GUI) {
+    write_file($$PWD/fervor.gui, CURRENT_FERVOR_GUI)
+    touch($$PWD/fvupdater.h, $$PWD/fervor.gui)
 }
 
-isEmpty(FV_APP_VERSION) {
-	warning("Fervor: falling back to application version '$$VERSION'")
-	DEFINES += FV_APP_VERSION=\\\"$$VERSION\\\"
-} else {
-	message("Fervor: building for application version '$$FV_APP_VERSION'")
-	DEFINES += FV_APP_VERSION=\\\"$$FV_APP_VERSION\\\"
-}
+DEFINES += QUAZIP_BUILD QUAZIP_STATIC
 
-# Unit tests
-#DEFINES += FV_DEBUG=1
-#DEPENDPATH += "$$PWD/tests/"
-#INCLUDEPATH += "$$PWD/tests/"
-#CONFIG += qtestlib
-#SOURCES += tests/fvversioncomparatortest.cpp
-#HEADERS += tests/fvversioncomparatortest.h
+INCLUDEPATH += $$PWD/quazip
+HEADERS += $$PWD/quazip/crypt.h \
+           $$PWD/quazip/ioapi.h \
+           $$PWD/quazip/JlCompress.h \
+           $$PWD/quazip/quaadler32.h \
+           $$PWD/quazip/quachecksum32.h \
+           $$PWD/quazip/quacrc32.h \
+           $$PWD/quazip/quazip.h \
+           $$PWD/quazip/quazipfile.h \
+           $$PWD/quazip/quazipfileinfo.h \
+           $$PWD/quazip/quazipnewinfo.h \
+           $$PWD/quazip/unzip.h \
+           $$PWD/quazip/zip.h
+SOURCES += $$PWD/quazip/qioapi.cpp \
+           $$PWD/quazip/JlCompress.cpp \
+           $$PWD/quazip/quaadler32.cpp \
+           $$PWD/quazip/quacrc32.cpp \
+           $$PWD/quazip/quazip.cpp \
+           $$PWD/quazip/quazipfile.cpp \
+           $$PWD/quazip/quazipfileinfo.cpp \
+           $$PWD/quazip/quazipnewinfo.cpp \
+           $$PWD/quazip/unzip.c \
+           $$PWD/quazip/zip.c
 
 DEPENDPATH += "$$PWD"
 INCLUDEPATH += "$$PWD"
+SOURCES += $$PWD/fvupdater.cpp \
+        $$PWD/fvversioncomparator.cpp \
+        $$PWD/fvplatform.cpp \
+        $$PWD/fvignoredversions.cpp \
+        $$PWD/fvavailableupdate.cpp
 
-SOURCES += fvupdatewindow.cpp \
-	fvupdater.cpp \
-	fvversioncomparator.cpp \
-	fvplatform.cpp \
-	fvignoredversions.cpp \
-	fvavailableupdate.cpp \
-	fvupdateconfirmdialog.cpp
+HEADERS += $$PWD/fvupdater.h \
+        $$PWD/fvversioncomparator.h \
+        $$PWD/fvplatform.h \
+        $$PWD/fvignoredversions.h \
+        $$PWD/fvavailableupdate.h
 
-HEADERS += fvupdatewindow.h \
-	fvupdater.h \
-	fvversioncomparator.h \
-	fvplatform.h \
-	fvignoredversions.h \
-	fvavailableupdate.h \
-	fvupdateconfirmdialog.h
+fervor_gui {
+    SOURCES += $$PWD/fvupdatewindow.cpp \
+            $$PWD/fvupdatedownloadprogress.cpp
 
-FORMS += fvupdatewindow.ui \
-	fvupdateconfirmdialog.ui
+    HEADERS += $$PWD/fvupdatewindow.h \
+            $$PWD/fvupdatedownloadprogress.h
+
+    FORMS += $$PWD/fvupdatewindow.ui \
+            $$PWD/fvupdatedownloadprogress.ui
+}
+
 
 TRANSLATIONS += fervor_lt.ts
 CODECFORTR = UTF-8
